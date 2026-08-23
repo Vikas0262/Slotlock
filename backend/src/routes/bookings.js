@@ -1,10 +1,11 @@
 import express from 'express';
 import pool from '../db/index.js';
 import { idempotencyMiddleware } from '../middleware/idempotency.js';
+import { requireRole } from '../middleware/auth.js';
 
-const router = express.Router();          // ← PEHLE ye
+const router = express.Router();          
 
-router.use(idempotencyMiddleware);         // ← FIR ye
+router.use(idempotencyMiddleware);         
 
 router.post('/', async (req, res) => {
   const { resource_id, customer_id, start_utc, end_utc } = req.body;
@@ -29,6 +30,28 @@ router.get('/', async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM bookings ORDER BY created_at`);
     res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/:id', requireRole('admin', 'staff', 'customer'), async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT * FROM bookings WHERE id = $1`, [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const booking = result.rows[0];
+
+    // Customer sirf apni khud ki booking dekh sakta hai — warna 404 (403 nahi)
+    if (req.user.role === 'customer' && booking.customer_id !== req.user.id) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    res.json(booking);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
