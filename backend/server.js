@@ -1,5 +1,6 @@
 import express from 'express'
 import dotenv from 'dotenv'
+import pool from './src/db/index.js'
 
 dotenv.config();
 
@@ -10,7 +11,15 @@ app.use(express.json());
 app.get('/health', (req, res) => 
   res.json({ status: 'ok' })
 );
-
+app.get('/db-test', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ connected: true, time: result.rows[0].now });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ connected: false, error: err.message });
+  }
+});
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => 
