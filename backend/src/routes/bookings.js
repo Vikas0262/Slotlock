@@ -2,9 +2,9 @@ import express from 'express';
 import pool from '../db/index.js';
 import { idempotencyMiddleware } from '../middleware/idempotency.js';
 
-router.use(idempotencyMiddleware);
+const router = express.Router();          // ← PEHLE ye
 
-const router = express.Router();
+router.use(idempotencyMiddleware);         // ← FIR ye
 
 router.post('/', async (req, res) => {
   const { resource_id, customer_id, start_utc, end_utc } = req.body;
