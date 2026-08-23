@@ -1,5 +1,8 @@
 import express from 'express';
 import pool from '../db/index.js';
+import { idempotencyMiddleware } from '../middleware/idempotency.js';
+
+router.use(idempotencyMiddleware);
 
 const router = express.Router();
 
