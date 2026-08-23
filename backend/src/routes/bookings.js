@@ -27,8 +27,29 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
+  const { resource_id, from, to } = req.query;
   try {
-    const result = await pool.query(`SELECT * FROM bookings ORDER BY created_at`);
+    const conditions = [];
+    const params = [];
+
+    if (resource_id) {
+      params.push(resource_id);
+      conditions.push(`resource_id = $${params.length}`);
+    }
+    if (from) {
+      params.push(from);
+      conditions.push(`upper(slot) > $${params.length}`);
+    }
+    if (to) {
+      params.push(to);
+      conditions.push(`lower(slot) < $${params.length}`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const result = await pool.query(
+      `SELECT * FROM bookings ${where} ORDER BY created_at`,
+      params
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
