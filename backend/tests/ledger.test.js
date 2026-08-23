@@ -44,9 +44,9 @@ test('refund never exceeds total charged amount', async () => {
   );
   const totalCharged = parseFloat(chargeRes.rows[0].total);
 
-  // manually inserting a refund that WOULD exceed charge - this simulates the guard check
-  const attemptedRefund = 600; // 500 se zyada
+ 
+  const attemptedRefund = 600; 
   const wouldExceed = attemptedRefund > totalCharged;
 
-  expect(wouldExceed).toBe(true); // hume pata hona chahiye ki ye exceed karega, taaki guard use rok sake
+  expect(wouldExceed).toBe(true); 
 });

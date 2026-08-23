@@ -8,7 +8,6 @@ function hashBody(body) {
 export async function idempotencyMiddleware(req, res, next) {
   const key = req.headers['idempotency-key'];
 
-  // agar header nahi bheja gaya, normal request treat karo
   if (!key) return next();
 
   try {
@@ -18,12 +17,11 @@ export async function idempotencyMiddleware(req, res, next) {
     );
 
     if (existing.rows.length > 0) {
-      // pehle se saved response wapas bhej do, naya kaam mat karo
       const saved = existing.rows[0].response_body;
       return res.status(saved.status).json(saved.data);
     }
 
-    // response bhejne ke baad usko save karne ke liye res.json ko override karo
+
     const originalJson = res.json.bind(res);
     res.json = (data) => {
       pool.query(
@@ -39,6 +37,6 @@ export async function idempotencyMiddleware(req, res, next) {
     next();
   } catch (err) {
     console.error(err);
-    next(); // agar middleware mein hi error aaye, normal flow chalne do
+    next(); 
   }
 }

@@ -3,7 +3,7 @@ import pool from '../src/db/index.js';
 async function seed() {
   console.log('Seeding started...');
 
-  // 1. Resources - 2 alag timezones mein (ek DST wala, ek non-DST)
+  
   const r1 = await pool.query(
     `INSERT INTO resources (name, iana_timezone) VALUES ('Dr. Rao', 'Asia/Kolkata') RETURNING id`
   );
@@ -17,7 +17,7 @@ async function seed() {
   const resourceIds = [r1.rows[0].id, r2.rows[0].id, r3.rows[0].id];
   console.log('Created 3 resources:', resourceIds);
 
-  // 2. Availability rules - Mon-Fri 09:00-17:00, agle 90 din
+
   for (const resourceId of resourceIds) {
     for (const day of ['MON', 'TUE', 'WED', 'THU', 'FRI']) {
       await pool.query(
@@ -30,8 +30,6 @@ async function seed() {
   }
   console.log('Created availability rules for 90 days.');
 
-  // 3. ~5000 random bookings - kuch collide bhi hongi (EXCLUDE constraint ki wajah se),
-  // wo skip ho jayengi - ye khud proof hai ki system sahi kaam kar raha hai
   let inserted = 0;
   let attempts = 0;
   const maxAttempts = 20000;
@@ -40,12 +38,12 @@ async function seed() {
     attempts++;
     const resourceId = resourceIds[Math.floor(Math.random() * resourceIds.length)];
     const dayOffset = Math.floor(Math.random() * 90);
-    const hour = 9 + Math.floor(Math.random() * 8); // 9 AM - 5 PM ke beech
+    const hour = 9 + Math.floor(Math.random() * 8); 
 
     const start = new Date();
     start.setDate(start.getDate() + dayOffset);
     start.setHours(hour, 0, 0, 0);
-    const end = new Date(start.getTime() + 30 * 60000); // 30 min ki booking
+    const end = new Date(start.getTime() + 30 * 60000); 
 
     try {
       await pool.query(
@@ -55,7 +53,6 @@ async function seed() {
       );
       inserted++;
     } catch (err) {
-      // slot collision - expected with random data, skip and try again
     }
   }
 

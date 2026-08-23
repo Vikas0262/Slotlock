@@ -5,9 +5,6 @@ export function localToUTC(dateStr, timeStr, zone) {
   return dt.toUTC().toISO();
 }
 
-// Round-trip check: local -> UTC -> local wapas convert karke dekhte hain
-// ki original time match karta hai ya nahi. Agar nahi karta, matlab wo local
-// time DST transition ki wajah se exist hi nahi karta tha (spring-forward gap).
 export function inspectLocalTime(dateStr, timeStr, zone) {
   const dt = DateTime.fromISO(`${dateStr}T${timeStr}`, { zone });
 

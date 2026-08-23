@@ -46,7 +46,6 @@ router.get('/:id', requireRole('admin', 'staff', 'customer'), async (req, res) =
 
     const booking = result.rows[0];
 
-    // Customer sirf apni khud ki booking dekh sakta hai — warna 404 (403 nahi)
     if (req.user.role === 'customer' && booking.customer_id !== req.user.id) {
       return res.status(404).json({ error: 'Not found' });
     }

@@ -19,14 +19,13 @@ test('overlapping bookings for the same resource are rejected at DB level', asyn
   const start = '2027-01-01T04:00:00Z';
   const end = '2027-01-01T04:30:00Z';
 
-  // Pehli booking successfully honi chahiye
   await pool.query(
     `INSERT INTO bookings (resource_id, customer_id, slot, status)
      VALUES ($1, gen_random_uuid(), tstzrange($2, $3, '[)'), 'confirmed')`,
     [testResourceId, start, end]
   );
 
-  // Dusri overlapping booking REJECT honi chahiye
+
   await expect(
     pool.query(
       `INSERT INTO bookings (resource_id, customer_id, slot, status)

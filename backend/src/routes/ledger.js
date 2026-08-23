@@ -3,7 +3,6 @@ import pool from '../db/index.js';
 
 const router = express.Router();
 
-// Charge record karo (booking confirm hone ke turant baad call karna hai)
 router.post('/charge', async (req, res) => {
   const { booking_id, amount } = req.body;
   try {
@@ -18,7 +17,6 @@ router.post('/charge', async (req, res) => {
   }
 });
 
-// Derived balance dekho (stored nahi, calculate hota hai)
 router.get('/balance/:bookingId', async (req, res) => {
   try {
     const result = await pool.query(
@@ -31,8 +29,6 @@ router.get('/balance/:bookingId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Cancel karo + policy ke hisaab se refund do
 router.post('/cancel/:bookingId', async (req, res) => {
   const { bookingId } = req.params;
   try {
@@ -42,7 +38,6 @@ router.post('/cancel/:bookingId', async (req, res) => {
     }
     const booking = bookingRes.rows[0];
 
-    // slot ka start time nikalo range se
     const slotStartRes = await pool.query(
       `SELECT lower(slot) AS start_time FROM bookings WHERE id = $1`,
       [bookingId]
@@ -50,7 +45,6 @@ router.post('/cancel/:bookingId', async (req, res) => {
     const startTime = new Date(slotStartRes.rows[0].start_time);
     const hoursBeforeStart = (startTime - new Date()) / 3600000;
 
-    // policy dhoondo
     const policyRes = await pool.query(
       `SELECT * FROM cancellation_policies
        WHERE resource_id = $1
@@ -60,7 +54,6 @@ router.post('/cancel/:bookingId', async (req, res) => {
     );
     const refundPct = policyRes.rows.length > 0 ? parseFloat(policyRes.rows[0].refund_pct) : 0;
 
-    // ab tak total kitna charge hua aur refund hua, calculate karo
     const chargeRes = await pool.query(
       `SELECT COALESCE(SUM(amount),0) AS total FROM ledger WHERE booking_id = $1 AND entry_type = 'charge'`,
       [bookingId]
@@ -73,7 +66,6 @@ router.post('/cancel/:bookingId', async (req, res) => {
     const totalRefunded = parseFloat(refundedRes.rows[0].total);
     const refundAmount = (totalCharged * refundPct) / 100;
 
-    // GUARD: refund charge se zyada kabhi na ho
     if (totalRefunded + refundAmount > totalCharged) {
       return res.status(400).json({ error: 'Refund would exceed charged amount' });
     }
