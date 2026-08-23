@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import pool from './src/db/index.js'
 import resourceRoutes from './src/routes/resources.js';
 import bookingRoutes from './src/routes/bookings.js';
+import availabilityRoutes from './src/routes/availability.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ const PORT = process.env.PORT || 5000;
   
 app.use('/resources', resourceRoutes);
 app.use('/bookings', bookingRoutes);
+app.use('/availability', availabilityRoutes);
 app.listen(PORT, () => 
   console.log(`Server running on ${PORT}`)
 );
