@@ -52,7 +52,7 @@ export function useHold() {
     } catch (err) {
       if (err.response?.status === 409) {
         setState('conflict');
-        setErrorMessage('Slot was just taken by someone else.');
+        setErrorMessage('This slot is no longer available — it may already be held (possibly by your own earlier attempt) or booked.');
       } else {
         setState('error');
         setErrorMessage(err.message);

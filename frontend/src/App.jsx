@@ -94,9 +94,18 @@ export default function App() {
   }, [hold]);
 
   const closeDialog = useCallback(() => {
+    // Closing the dialog doesn't cancel the hold server-side (there's no
+    // release endpoint — a hold only ever goes away by expiry or by being
+    // confirmed). Refetch so the grid immediately reflects that this slot
+    // is no longer "free" instead of leaving a stale green cell someone
+    // (including the same user) could click again and get a confusing
+    // "someone else booked it" conflict for what's actually their own
+    // still-active hold.
+    const hadActiveHold = hold.state === 'holding' || hold.state === 'confirming';
     setDialogOpen(false);
     hold.reset();
     setPendingSlot(null);
+    if (hadActiveHold) setRefreshToken((t) => t + 1);
   }, [hold]);
 
   return (
