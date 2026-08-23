@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "jest": {
+    "transform": {}
   },
   "keywords": [],
   "author": "",
@@ -18,5 +22,9 @@
     "luxon": "^3.7.2",
     "nodemon": "^3.1.14",
     "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.4.2"
   }
 }
