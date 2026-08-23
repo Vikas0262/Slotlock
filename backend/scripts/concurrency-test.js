@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-const RESOURCE_ID = 'd3c8c02f-6cb8-48ad-b39d-50fe686ae5fa';
-const START = '2026-09-10T06:00:00Z';
-const END = '2026-09-10T06:30:00Z';
+// RESOURCE_ID can be overridden via env var so this script keeps working
+// after a fresh seed run assigns new random resource UUIDs.
+const RESOURCE_ID = process.env.CONCURRENCY_TEST_RESOURCE_ID || 'd3c8c02f-6cb8-48ad-b39d-50fe686ae5fa';
+// Far enough out that the random 90-day seed window can never have already
+// booked this exact slot, so a "0 succeeded" run can't be misread as a bug.
+const START = '2030-01-15T06:00:00Z';
+const END = '2030-01-15T06:30:00Z';
 
 async function fireBooking(i) {
   try {
