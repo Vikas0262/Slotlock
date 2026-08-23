@@ -6,6 +6,7 @@ import bookingRoutes from './src/routes/bookings.js';
 import availabilityRoutes from './src/routes/availability.js';
 import holdRoutes from './src/routes/holds.js';
 import { startReaper } from './src/utils/reaper.js';
+import ledgerRoutes from './src/routes/ledger.js';
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ app.use('/resources', resourceRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/availability', availabilityRoutes);
 app.use('/holds', holdRoutes);
-
+app.use('/ledger', ledgerRoutes);
 startReaper();
 
 app.listen(PORT, () => 
