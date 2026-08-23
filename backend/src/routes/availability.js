@@ -3,7 +3,6 @@ import pool from '../db/index.js';
 
 const router = express.Router();
 
-// Recurring rule banao (jaise "Mon-Fri 09:00-17:00")
 router.post('/rules', async (req, res) => {
   const { resource_id, byday, start_local_time, end_local_time, effective_from, effective_until } = req.body;
   try {
@@ -20,7 +19,6 @@ router.post('/rules', async (req, res) => {
   }
 });
 
-// Agle 30 din ke free slots - poora SQL mein calculate hota hai
 router.get('/free-slots/:resourceId', async (req, res) => {
   const { resourceId } = req.params;
 
@@ -50,6 +48,11 @@ router.get('/free-slots/:resourceId', async (req, res) => {
           AND bk.status = 'confirmed'
           AND bk.slot && tstzrange(o.start_utc, o.end_utc)
       )
+      AND NOT EXISTS (
+        SELECT 1 FROM blackouts b
+        WHERE b.resource_id = o.resource_id
+          AND tstzrange(b.start_utc, b.end_utc) && tstzrange(o.start_utc, o.end_utc)
+      )
       ORDER BY o.start_utc;
     `;
 
@@ -61,4 +64,33 @@ router.get('/free-slots/:resourceId', async (req, res) => {
   }
 });
 
+router.post('/blackouts', async (req, res) => {
+  const { resource_id, start_utc, end_utc, reason } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO blackouts (resource_id, start_utc, end_utc, reason)
+       VALUES ($1,$2,$3,$4) RETURNING *`,
+      [resource_id, start_utc, end_utc, reason]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/one-off', async (req, res) => {
+  const { resource_id, start_utc, end_utc } = req.body;
+  try {
+    const result = await pool.query(
+      `INSERT INTO one_off_availability (resource_id, start_utc, end_utc)
+       VALUES ($1,$2,$3) RETURNING *`,
+      [resource_id, start_utc, end_utc]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 export default router;
