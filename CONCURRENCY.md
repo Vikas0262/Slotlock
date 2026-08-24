@@ -62,6 +62,34 @@ were no crashes, hangs, or unexpected status codes. Verified independently in
 the database — querying `bookings` for that resource and time slot returns
 exactly one row.
 
+## Hold expiry: approach and failure mode
+
+Expired holds are freed two ways, deliberately overlapping:
+
+1. **Background reaper** (`src/utils/reaper.js`) — every 30s, `UPDATE holds SET
+   status = 'expired' WHERE status = 'active' AND expires_at <= now()`. This
+   is what makes an expired hold's slot show up again in `GET
+   /availability/free-slots`, since that query filters on `status = 'active'`.
+2. **Expiry-aware confirm** (`src/routes/holds.js`, `POST
+   /holds/:holdId/confirm`) — the confirm transaction re-checks `status =
+   'active' AND expires_at > now()` itself, under `FOR UPDATE`, regardless of
+   whether the reaper has run yet.
+
+**Failure mode if the reaper dies:** the `holds` row is never flipped to
+`'expired'`, so the slot keeps appearing *unavailable* in the free-slots
+query even though the hold is functionally dead — a false "still held" for
+anyone browsing. It does **not** cause a double-booking or a stuck slot
+forever: the confirm endpoint's own `expires_at > now()` check is
+independent of the reaper and still correctly rejects a confirm on a
+dead hold with `410`, and a fresh `POST /holds` on that same slot succeeds
+immediately once `expires_at` has passed, because the `EXCLUDE` constraint
+is scoped to `WHERE (status = 'active')` — an expired-but-not-yet-reaped row
+still counts as `'active'` in that partial constraint, however, so a new
+hold attempt on the exact same slot *would* still conflict until the reaper
+(or a confirm attempt on the old hold) flips its status. Net effect of the
+reaper being down: browsing shows stale unavailability and a re-hold on the
+identical slot can 409 until it catches up — never data corruption.
+
 ## What happens if the constraint is removed
 
 Dropping the `EXCLUDE` constraint (`ALTER TABLE bookings DROP CONSTRAINT
